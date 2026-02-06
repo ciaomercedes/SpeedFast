@@ -23,7 +23,6 @@ public class PedidoExpress extends Pedido {
 
     @Override
     public void asignarRepartidor(String nombreRepartidor) {
-        System.out.println("\n[COMPRA EXPRESS]");
         System.out.println("Repartidor " + nombreRepartidor +
                 " ha sido asignado a su compra Express exitosamente");
     }

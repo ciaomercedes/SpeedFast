@@ -7,17 +7,26 @@ public abstract class Pedido {
     protected String tipoPedido;
     protected double distanciaKm;
     protected String nombreRepartidor;
+    protected EstadoPedido estado;
 
-    public Pedido(int idPedido, String direcionEntrega, String tipoPedido, double distanciaKm) {
+    public Pedido(int idPedido, String direccionEntrega, String tipoPedido, double distanciaKm) {
         this.idPedido = idPedido;
-        this.direccionEntrega = direcionEntrega;
+        this.direccionEntrega = direccionEntrega;
         this.tipoPedido = tipoPedido;
         this.distanciaKm = distanciaKm;
+        this.estado = EstadoPedido.PENDIENTE; //estado INICIAL
+    }
+
+    public void mostrarAsignacionCompleta (String nombreRepartidor) {
+        asignarRepartidor(nombreRepartidor);
+
+        System.out.println("Dirección de entrega: " + direccionEntrega);
+        System.out.println("Tiempo estimado de entrega: " + calcularTiempoEntrega() + " minutos");
     }
 
     public void mostrarResumen() {
         System.out.println("ID Pedido: " + idPedido);
-        System.out.println("Direcion Entrega: " + direccionEntrega);
+        System.out.println("Direccion Entrega: " + direccionEntrega);
         System.out.println("Tipo Pedido: " + tipoPedido);
         System.out.println("Distancia Km: " + distanciaKm);
     }
@@ -58,5 +67,13 @@ public abstract class Pedido {
 
     public double getDistanciaKm() {
         return distanciaKm;
+    }
+
+    public EstadoPedido getEstado() {
+        return estado;
+    }
+
+    public synchronized void setEstado(EstadoPedido nuevoEstado) {
+        this.estado = nuevoEstado;
     }
 }

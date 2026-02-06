@@ -1,49 +1,62 @@
 package cl.speedfast.model;
 
 import cl.speedfast.app.ControladorDeEnvios;
-import java.util.List;
-import java.util.Random;
 
 public class Repartidor implements Runnable {
 
     private String nombre;
-    private List<Pedido> pedidosAsignados;
+    private ZonaDeCarga zonaDeCarga;
     private ControladorDeEnvios controlador;
 
-    public Repartidor(String nombre, List<Pedido> pedidosAsignados, ControladorDeEnvios controlador) {
+    public Repartidor(String nombre, ZonaDeCarga zonaDeCarga, ControladorDeEnvios controlador) {
         this.nombre = nombre;
-        this.pedidosAsignados = pedidosAsignados;
+        this.zonaDeCarga = zonaDeCarga;
         this.controlador = controlador;
     }
 
     @Override
     public void run() {
-        Random random = new Random();
 
-        System.out.println("Repartidor: " + nombre + " inició la ruta de entregas\n");
+        System.out.println("Repartidor: " + nombre + " listo para comenzar ruta de despacho");
+        System.out.println("---------------------------------------------------------------------------------------");
 
-        for (Pedido pedido : pedidosAsignados) {
-            System.out.println("-> " + nombre + " comenzó la entrega del pedido " + pedido.getIdPedido() + " (" + pedido.getTipoPedido() + ")");
+        while (true) {
+            Pedido pedido = zonaDeCarga.retirarPedido();
+
+            if (pedido == null) {
+                break; // no quedan pedidos
+            }
+            //Se empieza el flujo de pedido
+            pedido.setEstado(EstadoPedido.EN_REPARTO);
+
+            synchronized(System.out) {
+
+                                pedido.asignarRepartidor(); //Mensaje de 'buscando repartidor'
+                pedido.setNombreRepartidor(nombre); //asignacion del repartidor
+                pedido.mostrarAsignacionCompleta(nombre);
+                System.out.println(nombre + " retiró pedido " + pedido.getIdPedido() + "\n");
+            }
+
+            System.out.println("---------------------------------------------------------------------------------------");
 
             try {
-                int tiempo = pedido.calcularTiempoEntrega();
-                int pausa = random.nextInt(2000) + 1000; // de 1 a 3 segundos
-                Thread.sleep(pausa);
-
-                System.out.println("\nÉxito! " + nombre + " entregó el pedido "
-                        + pedido.getIdPedido() + " (" + pedido.getTipoPedido()
-                        + ") | Tiempo estimado: " + tiempo + " minutos");
-
-                //guardamos el nombre del repartidor para el historial
-                pedido.setNombreRepartidor(nombre);
-
-                //registramos la entrega
-                controlador.despachar(pedido);
-
+                Thread.sleep(pedido.calcularTiempoEntrega() * 100);
             } catch (InterruptedException e) {
-                System.out.println("Atención! Entrega interrumpida del pedido" + pedido.getIdPedido());
+                Thread.currentThread().interrupt();
+            }
+
+            pedido.setEstado(EstadoPedido.ENTREGADO);
+            controlador.despachar(pedido);
+
+            synchronized (System.out) {
+                System.out.println(nombre + " entregó pedido " + pedido.getIdPedido());
+                System.out.println("Estado final del pedido "
+                        + pedido.getIdPedido() + ": " + pedido.getEstado());
+                System.out.println("---------------------------------------------------------------------------------------");
             }
         }
-        System.out.println("Repartidor: " + nombre + " finalizó todas sus entregas.\n");
+
+        System.out.println("Repartidor " + nombre + " terminó su ruta");
+        System.out.println("---------------------------------------------------------------------------------------");
     }
 }
