@@ -1,6 +1,6 @@
 package cl.speedfast.interfaces;
 
-import cl.speedfast.model.Pedido;
+import cl.speedfast.modelo.Pedido;
 
 public interface Cancelable {
     void cancelar(Pedido pedido);
