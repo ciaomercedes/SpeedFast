@@ -1,10 +1,12 @@
 package cl.speedfast.modelo;
 
 import cl.speedfast.controladores.ControladorDeEnvios;
+import cl.speedfast.dao.*;
 import java.util.List;
 
 public class Repartidor implements Runnable {
 
+    private int idRepartidor;
     private String nombre;
     private ZonaDeCarga zonaDeCarga;
     private ControladorDeEnvios controlador;
@@ -15,7 +17,8 @@ public class Repartidor implements Runnable {
             "Carlos Espina"
     );
 
-    public Repartidor(String nombre, ZonaDeCarga zonaDeCarga, ControladorDeEnvios controlador) {
+    public Repartidor(int idRepartidor, String nombre, ZonaDeCarga zonaDeCarga, ControladorDeEnvios controlador) {
+        this.idRepartidor = idRepartidor;
         this.nombre = nombre;
         this.zonaDeCarga = zonaDeCarga;
         this.controlador = controlador;
@@ -27,6 +30,8 @@ public class Repartidor implements Runnable {
         System.out.println("Repartidor: " + nombre + " listo para comenzar ruta de despacho");
         System.out.println("---------------------------------------------------------------------------------------");
 
+        PedidoDAO pedidoDAO = new PedidoDAO();
+
         while (true) {
             Pedido pedido = zonaDeCarga.retirarPedido();
 
@@ -35,10 +40,11 @@ public class Repartidor implements Runnable {
             }
             //Se empieza el flujo de pedido
             pedido.setEstado(EstadoPedido.EN_REPARTO);
+            pedido.setNombreRepartidor(nombre);
+            pedidoDAO.actualizarEstado(pedido); // se actualiza en BD
 
             synchronized(System.out) {
-
-                                pedido.asignarRepartidor(); //Mensaje de 'buscando repartidor'
+                pedido.asignarRepartidor(); //Mensaje de 'buscando repartidor'
                 pedido.setNombreRepartidor(nombre); //asignacion del repartidor
                 pedido.mostrarAsignacionCompleta(nombre);
                 System.out.println(nombre + " retiró pedido " + pedido.getIdPedido() + "\n");
@@ -53,6 +59,11 @@ public class Repartidor implements Runnable {
             }
 
             pedido.setEstado(EstadoPedido.ENTREGADO);
+            pedidoDAO.actualizarEstado(pedido); // se actualiza en BD
+
+            EntregaDAO entregaDAO = new EntregaDAO();
+            entregaDAO.guardar(pedido, this); // Inserta id_pedido, id_repartidor, fecha, hora
+
             controlador.despachar(pedido);
 
             synchronized (System.out) {
@@ -65,5 +76,13 @@ public class Repartidor implements Runnable {
 
         System.out.println("Repartidor " + nombre + " terminó su ruta");
         System.out.println("---------------------------------------------------------------------------------------");
+    }
+
+    public int getIdRepartidor() {
+        return idRepartidor;
+    }
+
+    public String getNombre() {
+        return nombre;
     }
 }

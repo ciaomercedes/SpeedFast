@@ -76,4 +76,8 @@ public abstract class Pedido {
     public synchronized void setEstado(EstadoPedido nuevoEstado) {
         this.estado = nuevoEstado;
     }
+
+    public void setIdPedido(int idPedido) {
+        this.idPedido = idPedido;
+    }
 }

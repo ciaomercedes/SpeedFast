@@ -4,10 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import cl.speedfast.controladores.ControladorDeEnvios;
-import cl.speedfast.modelo.Pedido;
-import cl.speedfast.modelo.EstadoPedido;
-import cl.speedfast.modelo.Repartidor;
-import cl.speedfast.modelo.ZonaDeCarga;
+import cl.speedfast.modelo.*;
+import cl.speedfast.dao.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,7 +32,7 @@ public class VentanaAsignarRepartidor extends javax.swing.JFrame {
 
         add(panelBotones, BorderLayout.CENTER);
 
-        //Evento para cada bvton
+        //Evento para cada boton
         btnExpress.addActionListener(e -> asignarRepartidor(controlador, "Compra Express"));
         btnComida.addActionListener(e -> asignarRepartidor(controlador, "Comida"));
         btnEncomienda.addActionListener(e -> asignarRepartidor(controlador, "Encomienda"));
@@ -61,6 +59,16 @@ public class VentanaAsignarRepartidor extends javax.swing.JFrame {
 
         String nombre = comboRepartidor.getSelectedItem().toString();
 
+        // consulta del id del repartidor en la bd
+        RepartidorDAO repartidorDAO = new RepartidorDAO();
+        int id = repartidorDAO.obtenerIdPorNombre(nombre);
+
+        if (id == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Error: el repartidor seleccionado no existe en la base de datos");
+            return;
+        }
+
         // Filtrar pedidos pendientes del tipo seleccionado
         List<Pedido> listaFiltrada = controlador.getListaPedidos().stream()
                 .filter(p -> p.getTipoPedido().equals(tipoPedido) && p.getEstado() == EstadoPedido.PENDIENTE)
@@ -77,7 +85,7 @@ public class VentanaAsignarRepartidor extends javax.swing.JFrame {
 
         // Ejecutar repartidor en hilo
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(new Repartidor(nombre, zona, controlador));
+        executor.execute(new Repartidor(id, nombre, zona, controlador));
         executor.shutdown();
 
         JOptionPane.showMessageDialog(null,

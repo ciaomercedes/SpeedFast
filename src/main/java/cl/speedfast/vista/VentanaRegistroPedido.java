@@ -2,6 +2,8 @@ package cl.speedfast.vista;
 
 import cl.speedfast.modelo.*;
 import cl.speedfast.controladores.ControladorDeEnvios;
+import cl.speedfast.dao.*;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -14,47 +16,59 @@ public class VentanaRegistroPedido extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         setLayout(new GridLayout(5,2,5,5));
 
-        JTextField txtId = new JTextField();
         JTextField txtDireccion = new JTextField();
+        JTextField txtDistancia = new JTextField();
 
         String[] tipos = {"Comida","Encomienda","Express"};
         JComboBox<String> comboTipo = new JComboBox<>(tipos);
 
         JButton btnGuardar = new JButton("Guardar");
 
-        add(new JLabel("ID:"));
-        add(txtId);
         add(new JLabel("Dirección:"));
         add(txtDireccion);
         add(new JLabel("Tipo:"));
         add(comboTipo);
+        add(new JLabel("Distancia (Km):"));
+        add(txtDistancia);
         add(new JLabel(""));
         add(btnGuardar);
 
         btnGuardar.addActionListener(e -> {
 
-            if(txtId.getText().isEmpty() || txtDireccion.getText().isEmpty()){
+            if(txtDireccion.getText().isEmpty() || txtDistancia.getText().isEmpty()){
                 JOptionPane.showMessageDialog(this,
                         "Complete todos los campos");
                 return;
             }
 
-            int id = Integer.parseInt(txtId.getText());
             String direccion = txtDireccion.getText();
             String tipo = comboTipo.getSelectedItem().toString();
+            double distancia;
+
+            try {
+                distancia = Double.parseDouble(txtDistancia.getText());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Ingrese un valor válido para distancia");
+                return;
+            }
 
             Pedido pedido;
 
             switch (tipo){
                 case "Comida":
-                    pedido = new PedidoComida(id,direccion,3);
+                    pedido = new PedidoComida(0,direccion, distancia);
                     break;
                 case "Encomienda":
-                    pedido = new PedidoEncomienda(id,direccion,3);
+                    pedido = new PedidoEncomienda(0,direccion, distancia);
                     break;
                 default:
-                    pedido = new PedidoExpress(id,direccion,3);
+                    pedido = new PedidoExpress(0,direccion, distancia);
             }
+
+            // Guardar en la BD
+            PedidoDAO pedidoDAO = new PedidoDAO();
+            pedidoDAO.guardar(pedido); // Aqui recuperamos el ID asignado por la base de datos y lo asigna y guarda
 
             controlador.agregarPedido(pedido);
 

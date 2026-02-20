@@ -19,7 +19,7 @@ public class VentanaListaPedidos extends JFrame {
         setLayout(new BorderLayout());
 
         modeloTabla = new DefaultTableModel();
-        modeloTabla.addColumn("ID");
+        modeloTabla.addColumn("Distancia");
         modeloTabla.addColumn("Dirección");
         modeloTabla.addColumn("Tipo");
         modeloTabla.addColumn("Estado");
