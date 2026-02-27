@@ -14,14 +14,14 @@ public class VentanaAsignarRepartidor extends javax.swing.JFrame {
     public VentanaAsignarRepartidor(ControladorDeEnvios controlador) {
 
         setTitle("Asignar Repartidor");
-        setSize(500,200);
+        setSize(500, 200);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         JLabel titulo = new JLabel("Elija el pedido al cual se asignará un repartidor", JLabel.CENTER);
         add(titulo, BorderLayout.NORTH);
 
-        JPanel panelBotones = new JPanel(new GridLayout(1,3,10,10));
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 10, 10));
         JButton btnExpress = new JButton("Pedido Express");
         JButton btnComida = new JButton("Pedido Comida");
         JButton btnEncomienda = new JButton("Pedido Encomienda");
@@ -42,54 +42,58 @@ public class VentanaAsignarRepartidor extends javax.swing.JFrame {
 
     private void asignarRepartidor(ControladorDeEnvios controlador, String tipoPedido) {
 
-        // Lista desplegable con los repartidores fijos
-        JComboBox<String> comboRepartidor = new JComboBox<>(Repartidor.NOMBRES_FIJOS.toArray(new String[0]));
-        JPanel panelSeleccion = new JPanel(new BorderLayout());
-        panelSeleccion.add(new JLabel("Seleccione el repartidor:"), BorderLayout.NORTH);
-        panelSeleccion.add(comboRepartidor, BorderLayout.CENTER);
+        // Cargar repartidores desde BD
+        RepartidorDAO repartidorDAO = new RepartidorDAO();
+        List<Repartidor> repartidoresBD = repartidorDAO.leerTodos();
+
+        JComboBox<String> comboRepartidor = new JComboBox<>();
+        for (Repartidor r : repartidoresBD) {
+            comboRepartidor.addItem(r.getIdRepartidor() + " - " + r.getNombre());
+        }
 
         int opcion = JOptionPane.showConfirmDialog(
                 null,
-                panelSeleccion,
+                comboRepartidor,
                 "Asignar repartidor",
                 JOptionPane.OK_CANCEL_OPTION
         );
 
-        if(opcion != JOptionPane.OK_OPTION) return;
+        if (opcion != JOptionPane.OK_OPTION) return;
 
-        String nombre = comboRepartidor.getSelectedItem().toString();
-
-        // consulta del id del repartidor en la bd
-        RepartidorDAO repartidorDAO = new RepartidorDAO();
-        int id = repartidorDAO.obtenerIdPorNombre(nombre);
-
-        if (id == -1) {
-            JOptionPane.showMessageDialog(this,
-                    "Error: el repartidor seleccionado no existe en la base de datos");
-            return;
-        }
+        // Obtener ID y nombre desde el combo
+        String seleccionado = comboRepartidor.getSelectedItem().toString();
+        int idRepartidor = Integer.parseInt(seleccionado.split(" - ")[0]);
+        String nombreRepartidor = seleccionado.split(" - ")[1];
 
         // Filtrar pedidos pendientes del tipo seleccionado
         List<Pedido> listaFiltrada = controlador.getListaPedidos().stream()
                 .filter(p -> p.getTipoPedido().equals(tipoPedido) && p.getEstado() == EstadoPedido.PENDIENTE)
                 .toList();
 
-        if(listaFiltrada.isEmpty()){
-            JOptionPane.showMessageDialog(null,"No hay pedidos "+tipoPedido+" pendientes");
+        if (listaFiltrada.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No hay pedidos " + tipoPedido + " pendientes");
             return;
         }
 
-        // Creamos la zona de carga pero solo con los pedidos filtrados
-        ZonaDeCarga zona = new ZonaDeCarga();
-        listaFiltrada.forEach(zona::agregarPedido);
+        // Actualizar estado de pedidos en BD
+        PedidoDAO pedidoDAO = new PedidoDAO();
+        for (Pedido p : listaFiltrada) {
+            p.setEstado(EstadoPedido.EN_REPARTO);
+            p.setNombreRepartidor(nombreRepartidor);
+            pedidoDAO.actualizarEstado(p);
 
-        // Ejecutar repartidor en hilo
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(new Repartidor(id, nombre, zona, controlador));
-        executor.shutdown();
+            // Creamos la zona de carga pero solo con los pedidos filtrados
+            ZonaDeCarga zona = new ZonaDeCarga();
+            listaFiltrada.forEach(zona::agregarPedido);
 
-        JOptionPane.showMessageDialog(null,
-                "Repartidor "+nombre+" asignado a "+listaFiltrada.size()+" pedido(s) de tipo "+tipoPedido);
-        dispose();
+            // Ejecutar repartidor en hilo
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.execute(new Repartidor(idRepartidor, nombreRepartidor, zona, controlador));
+            executor.shutdown();
+
+            JOptionPane.showMessageDialog(null,
+                    "Repartidor " + nombreRepartidor + " asignado a " + listaFiltrada.size() + " pedido(s) de tipo " + tipoPedido);
+            dispose();
+        }
     }
 }

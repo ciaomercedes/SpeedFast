@@ -62,7 +62,7 @@ public class Repartidor implements Runnable {
             pedidoDAO.actualizarEstado(pedido); // se actualiza en BD
 
             EntregaDAO entregaDAO = new EntregaDAO();
-            entregaDAO.guardar(pedido, this); // Inserta id_pedido, id_repartidor, fecha, hora
+            entregaDAO.crear(pedido, this); // Inserta id_pedido, id_repartidor, fecha, hora
 
             controlador.despachar(pedido);
 
@@ -78,11 +78,20 @@ public class Repartidor implements Runnable {
         System.out.println("---------------------------------------------------------------------------------------");
     }
 
+    @Override
+    public String toString() {
+        return nombre;
+    }
+
     public int getIdRepartidor() {
         return idRepartidor;
     }
 
     public String getNombre() {
         return nombre;
+    }
+
+    public void setIdRepartidor(int idRepartidor) {
+        this.idRepartidor = idRepartidor;
     }
 }

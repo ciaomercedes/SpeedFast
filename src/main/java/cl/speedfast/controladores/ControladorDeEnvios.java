@@ -45,5 +45,4 @@ public class ControladorDeEnvios implements Despachable, Cancelable, Rastreable 
                     + p.getNombreRepartidor() +" | Dirección: " + p.getDireccionEntrega());
         }
     }
-
 }

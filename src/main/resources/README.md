@@ -28,6 +28,7 @@ Con esta aplicación, la empresa puede:
 - ✔️ Monitorear el estado de los pedidos: pendiente, en reparto o entregado.
 - ✔️ Registrar y almacenar las entregas en la base de datos para auditoría y seguimiento.
 - ✔️ Consultar los pedidos existentes mediante una interfaz gráfica amigable.
+- ✔️ Eliminar repartidores desde una lista desplegable validando que no tengan entregas asociadas.
 
 ---
 ## 🧱 Estructura general del proyecto
@@ -64,10 +65,11 @@ SpeedFast/
   └── GestorEntidades.java     # Interfaz que define métodos generales para gestión de entidades de negocio
   
 └── vista/                   
-  └── VentanaAsignarRepartidor.java # Interfaz gráfica para asignar repartidores a pedidos pendientes
-  └── VentanaListaPedidos.java      # Interfaz gráfica que muestra todos los pedidos en un JTable
-  └── VentanaPrincipal.java         # Ventana principal con menú de acciones de la aplicación
-  └── VentanaRegistroPedido.java    # Interfaz gráfica para registrar nuevos pedidos
+  └── VentanaAsignarRepartidor.java  # Interfaz gráfica para asignar repartidores a pedidos pendientes
+  └── VentanaListaPedidos.java       # Interfaz gráfica que muestra todos los pedidos en un JTable
+  └── VentanaPrincipal.java          # Ventana principal con menú de acciones de la aplicación
+  └── VentanaRegistroPedido.java     # Interfaz gráfica para registrar nuevos pedidos
+  └── VentanaEliminarRepartidor.java # Interfaz gráfica para eliminar repartidores con validación de entregas
   
 ├── resources/                 
   └── README.md                # Archivo manual de uso de la aplicación y documentación de clases

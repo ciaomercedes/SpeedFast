@@ -68,7 +68,7 @@ public class VentanaRegistroPedido extends javax.swing.JFrame {
 
             // Guardar en la BD
             PedidoDAO pedidoDAO = new PedidoDAO();
-            pedidoDAO.guardar(pedido); // Aqui recuperamos el ID asignado por la base de datos y lo asigna y guarda
+            pedidoDAO.crear(pedido); // Aqui recuperamos el ID asignado por la base de datos y lo asigna y guarda
 
             controlador.agregarPedido(pedido);
 
